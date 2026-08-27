@@ -4,7 +4,12 @@ A real-time collaborative sticky-note board where **multiple browser tabs** see 
 
 Built for **MLSA SRM Technical Task 4.1: Live-Sync Mini App** (2nd-year submission with all extensions).
 
-![React](https://img.shields.io/badge/React-18-61DAFB?logo=react) ![Socket.IO](https://img.shields.io/badge/Socket.IO-4-010101?logo=socket.io) ![Vite](https://img.shields.io/badge/Vite-6-646CFF?logo=vite)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Render-46E3B7?style=for-the-badge&logo=render)](https://mlsa-collabboard.onrender.com)
+[![React](https://img.shields.io/badge/React-18-61DAFB?logo=react)](https://react.dev)
+[![Socket.IO](https://img.shields.io/badge/Socket.IO-4-010101?logo=socket.io)](https://socket.io)
+[![Vite](https://img.shields.io/badge/Vite-6-646CFF?logo=vite)](https://vitejs.dev)
+
+🔗 **Live URL:** [https://mlsa-collabboard.onrender.com](https://mlsa-collabboard.onrender.com)
 
 ---
 
