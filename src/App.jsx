@@ -15,10 +15,14 @@ function App() {
 
   // ---- Socket connection ----
   useEffect(() => {
-    const s = io(
-      window.location.hostname === 'localhost' ? 'http://localhost:3001' : undefined,
-      { reconnection: true, reconnectionDelay: 1000 },
-    );
+    const isLocalDev = window.location.hostname === 'localhost' && window.location.port === '5173';
+    const serverUrl = isLocalDev ? 'http://localhost:3001' : window.location.origin;
+
+    const s = io(serverUrl, {
+      reconnection: true,
+      reconnectionDelay: 1000,
+      transports: ['websocket', 'polling'],
+    });
 
     s.on('connect', () => setConnected(true));
     s.on('disconnect', () => setConnected(false));
