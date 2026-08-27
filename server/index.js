@@ -1,12 +1,24 @@
 import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { store } from './store.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const server = createServer(app);
 const io = new Server(server, {
   cors: { origin: '*' },
+});
+
+// Serve static frontend files in production
+const distPath = path.join(__dirname, '../dist');
+app.use(express.static(distPath));
+app.get('*', (req, res) => {
+  res.sendFile(path.join(distPath, 'index.html'));
 });
 
 // ---- Helpers ----
