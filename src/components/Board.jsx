@@ -7,7 +7,7 @@ function Board({ notes, cursors, userId, conflictNoteId, onCreateNote, onUpdateN
 
   const handleDoubleClick = useCallback(
     (e) => {
-      // Only create a note when clicking the board background
+      
       if (e.target === boardRef.current || e.target.classList.contains('board-grid')) {
         onCreateNote(e.clientX - 110, e.clientY - 80);
       }

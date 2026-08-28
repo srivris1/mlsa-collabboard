@@ -1,6 +1,4 @@
-/* ==========================================================
-   CollabBoard — Futuristic Cyber-HUD Theme
-   ========================================================== */
+
 
 *,
 *::before,
@@ -44,10 +42,6 @@ body {
   flex-direction: column;
   overflow: hidden;
 }
-
-/* ==========================================================
-   Toolbar (HUD Header)
-   ========================================================== */
 
 .toolbar {
   display: flex;
@@ -109,7 +103,7 @@ body {
 .toolbar-color-dot {
   width: 22px;
   height: 22px;
-  border-radius: 0; /* Hex/Square look */
+  border-radius: 0; 
   clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
   border: 1px solid rgba(255,255,255,0.2);
   cursor: pointer;
@@ -194,10 +188,6 @@ body {
 
 @keyframes blink { 50% { opacity: 0; } }
 
-/* ==========================================================
-   Board (Holographic Grid)
-   ========================================================== */
-
 .board {
   flex: 1;
   position: relative;
@@ -240,10 +230,6 @@ body {
   clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
   pointer-events: none;
 }
-
-/* ==========================================================
-   Sticky Note (Datapad)
-   ========================================================== */
 
 .sticky-note {
   position: absolute;
@@ -372,10 +358,6 @@ body {
   text-transform: uppercase;
 }
 
-/* ==========================================================
-   Remote Cursor (Targeting Reticle)
-   ========================================================== */
-
 .remote-cursor {
   position: fixed;
   pointer-events: none;
@@ -400,9 +382,6 @@ body {
   clip-path: polygon(4px 0, 100% 0, 100% calc(100% - 4px), calc(100% - 4px) 100%, 0 100%, 0 4px);
 }
 
-/* ==========================================================
-   Scrollbar
-   ========================================================== */
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--neon-cyan); }

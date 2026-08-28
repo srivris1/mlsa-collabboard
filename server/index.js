@@ -14,14 +14,11 @@ const io = new Server(server, {
   cors: { origin: '*' },
 });
 
-// Serve static frontend files in production
 const distPath = path.join(__dirname, '../dist');
 app.use(express.static(distPath));
 app.get('*', (req, res) => {
   res.sendFile(path.join(distPath, 'index.html'));
 });
-
-// ---- Helpers ----
 
 function randomColor() {
   const hue = Math.floor(Math.random() * 360);
@@ -36,29 +33,23 @@ function randomName() {
   return `${a} ${n}`;
 }
 
-// ---- Socket.IO ----
-
 io.on('connection', (socket) => {
   const userColor = randomColor();
   const userName = randomName();
 
   console.log(`  ✓ ${userName} connected  (${socket.id.slice(0, 8)})`);
 
-  // Send full state on connect — this is how state survives a tab refresh
   socket.emit('state:sync', {
     notes: store.getAllNotes(),
     cursors: store.getAllCursors(),
     user: { id: socket.id, color: userColor, name: userName },
   });
 
-  // Notify others about the new user
   socket.broadcast.emit('user:joined', {
     id: socket.id,
     color: userColor,
     name: userName,
   });
-
-  // ---- Note events ----
 
   socket.on('note:create', (note, ack) => {
     const created = store.createNote({ ...note, createdBy: socket.id });
@@ -72,9 +63,9 @@ io.on('connection', (socket) => {
       if (ack) ack({ ok: false, error: 'Note not found' });
       return;
     }
-    // Broadcast the resolved state to everyone else
+    
     socket.broadcast.emit('note:updated', result.note);
-    // Tell the sender whether a conflict was resolved
+    
     if (ack) ack({ ok: true, note: result.note, conflict: result.conflict });
   });
 
@@ -83,8 +74,6 @@ io.on('connection', (socket) => {
     socket.broadcast.emit('note:deleted', noteId);
     if (ack) ack({ ok: true });
   });
-
-  // ---- Cursor events (volatile — dropping a frame is fine) ----
 
   socket.on('cursor:move', (position) => {
     store.setCursor(socket.id, { ...position, color: userColor, name: userName });
@@ -96,8 +85,6 @@ io.on('connection', (socket) => {
     });
   });
 
-  // ---- Disconnect ----
-
   socket.on('disconnect', () => {
     console.log(`  ✗ ${userName} disconnected (${socket.id.slice(0, 8)})`);
     store.removeCursor(socket.id);
@@ -105,8 +92,6 @@ io.on('connection', (socket) => {
     socket.broadcast.emit('user:left', socket.id);
   });
 });
-
-// ---- Start ----
 
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => {

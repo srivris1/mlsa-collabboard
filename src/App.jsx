@@ -13,7 +13,6 @@ function App() {
   const [conflictNoteId, setConflictNoteId] = useState(null);
   const conflictTimer = useRef(null);
 
-  // ---- Socket connection ----
   useEffect(() => {
     const isLocalDev = window.location.hostname === 'localhost' && window.location.port === '5173';
     const serverUrl = isLocalDev ? 'http://localhost:3001' : window.location.origin;
@@ -27,7 +26,6 @@ function App() {
     s.on('connect', () => setConnected(true));
     s.on('disconnect', () => setConnected(false));
 
-    // Full state sync on (re)connect — state survives refresh
     s.on('state:sync', (data) => {
       const notesMap = {};
       data.notes.forEach((n) => { notesMap[n.id] = n; });
@@ -35,8 +33,6 @@ function App() {
       setCursors(data.cursors || {});
       setUser(data.user);
     });
-
-    // Note events from other tabs
     s.on('note:created', (note) => {
       setNotes((prev) => ({ ...prev, [note.id]: note }));
     });
@@ -53,7 +49,6 @@ function App() {
       });
     });
 
-    // Cursor events from other tabs
     s.on('cursor:moved', (data) => {
       setCursors((prev) => ({ ...prev, [data.id]: data }));
     });
@@ -70,14 +65,11 @@ function App() {
     return () => s.disconnect();
   }, []);
 
-  // ---- Note actions (all optimistic) ----
-
   const createNote = useCallback((x, y) => {
     if (!socket) return;
     const id = crypto.randomUUID();
     const note = { id, text: '', x, y, color: selectedColor };
 
-    // Optimistic: show immediately
     setNotes((prev) => ({
       ...prev,
       [id]: { ...note, createdAt: Date.now(), fieldTimestamps: {} },
@@ -94,7 +86,6 @@ function App() {
     if (!socket) return;
     const timestamp = Date.now();
 
-    // Optimistic: apply locally first
     setNotes((prev) => {
       if (!prev[id]) return prev;
       return { ...prev, [id]: { ...prev[id], ...fields } };
@@ -102,10 +93,10 @@ function App() {
 
     socket.emit('note:update', { id, fields, timestamp }, (res) => {
       if (res?.ok) {
-        // Replace with server's resolved state
+        
         setNotes((prev) => ({ ...prev, [id]: res.note }));
         if (res.conflict) {
-          // Flash conflict indicator
+          
           setConflictNoteId(id);
           if (conflictTimer.current) clearTimeout(conflictTimer.current);
           conflictTimer.current = setTimeout(() => setConflictNoteId(null), 800);
@@ -116,7 +107,7 @@ function App() {
 
   const deleteNote = useCallback((id) => {
     if (!socket) return;
-    // Optimistic: remove immediately
+    
     setNotes((prev) => {
       const next = { ...prev };
       delete next[id];
@@ -124,8 +115,6 @@ function App() {
     });
     socket.emit('note:delete', id);
   }, [socket]);
-
-  // ---- Cursor broadcast ----
 
   const handleMouseMove = useCallback((e) => {
     if (!socket) return;

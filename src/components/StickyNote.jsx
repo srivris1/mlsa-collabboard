@@ -15,9 +15,8 @@ function StickyNote({ note, isConflicting, onUpdate, onDelete }) {
   const noteRef = useRef(null);
   const textareaRef = useRef(null);
 
-  // ---- Drag ----
   const handleDragStart = useCallback((e) => {
-    // Don't drag when interacting with textarea, color dots, or delete button
+    
     if (
       e.target.tagName === 'TEXTAREA' ||
       e.target.closest('.note-color-dot') ||
@@ -49,7 +48,6 @@ function StickyNote({ note, isConflicting, onUpdate, onDelete }) {
     };
   }, [isDragging, note.id, onUpdate]);
 
-  // ---- Text editing ----
   const handleTextChange = useCallback(
     (e) => onUpdate(note.id, { text: e.target.value }),
     [note.id, onUpdate],
@@ -60,7 +58,6 @@ function StickyNote({ note, isConflicting, onUpdate, onDelete }) {
     textareaRef.current?.focus();
   }, []);
 
-  // ---- Color change ----
   const handleColorChange = useCallback(
     (color) => onUpdate(note.id, { color }),
     [note.id, onUpdate],
