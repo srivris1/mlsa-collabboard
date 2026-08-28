@@ -1,114 +1,42 @@
-# CollabBoard — Real-Time Collaborative Sticky Notes
+# CollabBoard
 
-A real-time collaborative sticky-note board where **multiple browser tabs** see each other's actions instantly — live cursors, drag-and-drop notes, color tagging, and conflict-safe simultaneous edits.
+CollabBoard is a shared sticky-note board I built for the MLSA task (4.1 — Live-Sync Mini App). The idea is simple: open two browser tabs side by side and everything stays in sync — creating notes, dragging them around, editing text, even your mouse cursor shows up on the other tab. It uses React on the frontend and a small Express + Socket.IO server on the backend.
 
-Built for **MLSA SRM Technical Task 4.1: Live-Sync Mini App** (2nd-year submission with all extensions).
+The real-time part works through Socket.IO. When you create or move a note, it gets applied to your screen immediately (optimistic update) and then sent to the server, which broadcasts it to everyone else. Cursor positions are sent as volatile events so if the network drops a frame it doesn't matter, the next cursor update fixes it. The server keeps all the notes in memory, so when you close a tab and reopen it you get the full board state back — nothing resets.
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-Render-46E3B7?style=for-the-badge&logo=render)](https://mlsa-collabboard.onrender.com)
-[![React](https://img.shields.io/badge/React-18-61DAFB?logo=react)](https://react.dev)
-[![Socket.IO](https://img.shields.io/badge/Socket.IO-4-010101?logo=socket.io)](https://socket.io)
-[![Vite](https://img.shields.io/badge/Vite-6-646CFF?logo=vite)](https://vitejs.dev)
+For the simultaneous editing problem (two tabs editing the same note at once), I used field-level last-write-wins. Each field on a note — text, x position, y position, color — has its own timestamp. So if one tab drags a note while another tab edits its text at the same time, both changes go through fine because they're touching different fields. If two tabs change the exact same field, the one with the later timestamp wins and the other tab gets a brief red flash to show a conflict was resolved. The logic for this is in `server/store.js`.
 
-🔗 **Live URL:** [https://mlsa-collabboard.onrender.com](https://mlsa-collabboard.onrender.com)
+## Running it locally
 
----
+Node 18+ required. Nothing else.
 
-## ✨ Features
-
-### Base Task
-- **Real-time sync** — Create, edit, drag, and delete sticky notes across multiple tabs
-- **Live cursors** — See other users' cursor positions with colored SVG arrows and name tags
-- **React + Socket.IO** — Modern component architecture with WebSocket-based real-time communication
-
-### 2nd-Year Extensions
-- **Optimistic UI updates** — Changes apply locally *immediately* before server confirmation, so the UI feels instant (no waiting for round-trips)
-- **Field-level conflict resolution** — Two tabs editing the *same note* simultaneously are handled with **Last-Write-Wins per field** (text, position, color each tracked independently). If one tab drags a note while another edits its text, both updates merge cleanly. A red glow flash indicates when a conflict is resolved.
-- **State survives refresh** — The server is the source of truth. Closing a tab and reopening it restores the exact board state (notes + positions + text) from the server.
-
-### How simultaneous edits are resolved
-Each note field (`text`, `x`, `y`, `color`) carries its own timestamp. When two tabs update the same field at the same time, the later timestamp wins (Last-Write-Wins). When they update *different* fields, both edits merge cleanly — no data is lost. The losing tab sees a brief red conflict flash animation to indicate the resolution happened.
-
----
-
-## 🚀 Quick Start
-
-### Prerequisites
-- **Node.js 18+** (check with `node -v`)
-
-### Run it
-```bash
-# Install dependencies
+```
 npm install
-
-# Start both the server and Vite dev server
 npm run dev
 ```
 
-This starts:
-- **Express + Socket.IO server** on `http://localhost:3001`
-- **Vite dev server** on `http://localhost:5173` (with proxy to the backend)
+That starts the backend on port 3001 and Vite dev server on port 5173. Open http://localhost:5173 in two tabs side by side. Double-click the board to create notes, drag them around, type in them — you'll see everything sync across both tabs.
 
-### Demo it
-1. Open `http://localhost:5173` in **two browser tabs** side by side
-2. **Double-click** anywhere on the board to create a sticky note
-3. Drag notes around — watch them move in the other tab instantly
-4. Edit note text — see it sync in real time
-5. Move your mouse — see the live cursor in the other tab
-6. Close one tab, reopen it — the board state is restored
-
----
-
-## 🏗 Architecture
-
+For production mode:
 ```
-┌─────────────┐     Socket.IO      ┌──────────────────┐
-│  React App  │◄──────────────────►│  Express Server   │
-│  (Tab 1)    │   note:create      │                  │
-│             │   note:update      │  In-memory store  │
-│  Live       │   note:delete      │  (notes + cursors)│
-│  Cursors    │   cursor:move      │                  │
-│  Sticky     │   state:sync       │  Conflict         │
-│  Notes      │                    │  Resolution       │
-└─────────────┘                    └──────────────────┘
-       ▲                                    ▲
-       │            Socket.IO               │
-┌─────────────┐◄──────────────────►         │
-│  React App  │                             │
-│  (Tab 2)    │                             │
-└─────────────┘
+npm run build
+npm start
 ```
 
-### Key files
-| File | Purpose |
-|------|---------|
-| `server/index.js` | Express + Socket.IO server, event handling |
-| `server/store.js` | In-memory state with field-level conflict resolution |
-| `src/App.jsx` | Root component, socket connection, optimistic state |
-| `src/components/Board.jsx` | Canvas with notes + remote cursors |
-| `src/components/StickyNote.jsx` | Draggable, editable note with colors |
-| `src/components/Cursor.jsx` | Remote user cursor with name tag |
-| `src/components/Toolbar.jsx` | Color picker, connection status, user info |
+## File structure
 
----
+- `server/index.js` — Express server, Socket.IO event handling, user assignment
+- `server/store.js` — in-memory note store with the field-level conflict resolution logic
+- `src/App.jsx` — main React component, socket connection, optimistic state management
+- `src/components/Board.jsx` — the board canvas, renders notes and remote cursors
+- `src/components/StickyNote.jsx` — individual note with drag, edit, color change, delete
+- `src/components/Cursor.jsx` — renders other users' cursors with colored arrows and name tags
+- `src/components/Toolbar.jsx` — top bar showing connection status, online count, color picker
 
-## 💡 Design Decisions
+## Simultaneous edit handling
 
-1. **Socket.IO over raw WebSockets** — Automatic reconnection, acknowledgement callbacks, and `volatile` events for cursor positions (dropping a frame is fine, the next one corrects it).
+Field-level last-write-wins — each note field (text, x, y, color) carries its own timestamp. Same-field conflicts pick the newer write; different-field edits merge without data loss.
 
-2. **Server-side source of truth** — All notes live in server memory. On reconnect, the client receives a full `state:sync` event. This cleanly solves the "state survives refresh" requirement without needing localStorage.
+## What I'd improve
 
-3. **Field-level timestamps** — Rather than a single `updatedAt` on the whole note, each field (text, x, y, color) carries its own timestamp. This means dragging a note and editing its text simultaneously from two tabs both succeed without data loss.
-
-4. **Volatile cursor events** — Cursor positions are sent with `socket.volatile.emit`, meaning the transport layer can drop frames if it's congested. The next position update self-corrects. This keeps bandwidth low.
-
----
-
-## 📹 Video Walkthrough Points
-
-For the 2–3 minute video, demonstrate:
-1. Open two tabs side-by-side → show live cursors
-2. Create a note in Tab 1 → appears in Tab 2 instantly
-3. Drag a note → moves in both tabs
-4. Edit text in one tab → shows in the other
-5. Close Tab 2, reopen → state is restored
-6. (Walk through the conflict resolution code in `server/store.js`)
+Everything is in memory right now so a server restart wipes the board. I'd add SQLite or something similar if this were a real app. I'd also want to debounce the text updates — right now every keystroke fires a socket event which works fine for a demo but would be wasteful at scale. Undo/redo would be nice too but I ran out of time.
